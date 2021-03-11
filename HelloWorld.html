@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<!--
+Copyright 2018 The Immersive Web Community Group
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+-->
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1, user-scalable=no'>
+    <meta name='mobile-web-app-capable' content='yes'>
+    <meta name='apple-mobile-web-app-capable' content='yes'>
+    <title>Hello World!</title>
+    <script src="./Build/CesiumUnminified/Cesium.js"></script>
+    <script src="./webvr-polyfill.js"></script>
+    <style>
+      @import url(../Build/CesiumUnminified/Widgets/widgets.css);
+      html,
+      body,
+      #cesiumContainer {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+      #vrButton{
+        position: absolute;
+        z-index: 999;
+        top: 100px;
+      }
+    </style>
+  </head>
+  <body>
+    <button id="vrButton">初始化vr</button>
+    <div id="cesiumContainer"></div>
+    <script>
+      var viewer = new Cesium.Viewer("cesiumContainer", {
+        vrButton: true,
+        animation: false, //是否显示动画控件(左下方那个)
+        baseLayerPicker: false, //是否显示图层选择控件
+        geocoder: false, //是否显示地名查找控件
+        timeline: false, //是否显示时间线控件
+        sceneModePicker: false, //是否显示投影方式控件
+        navigationHelpButton: false, //是否显示帮助信息控件
+        infoBox: false, //是否显示点击要素之后显示的信息
+      });
+      // new Cesium.VRTheWorldTerrainProvider (options)
+      var polyfill = new WebVRPolyfill();
+      initVR();
+      
+      var frameData = new VRFrameData();
+      function initVR() {
+        const vrswitch = document.getElementById("vrButton");
+        console.log("vrButton", vrButton);
+        var  canvas, gl, vrDisplay;
+        vrswitch.onclick = async () => {
+          // location.href = "steam://run/250820";
+          navigator.getVRDisplays().then((displays) => {
+            if (displays.length) {
+              vrDisplay = displays[0]
+              document.getElementsByClassName("cesium-vrButton")[0].addEventListener("click", function () {
+                canvas = viewer.scene.canvas
+                vrDisplay
+                  .requestPresent([{ source: canvas }])
+                  .then(function (res) {
+                    console.log('----------------------requestPresent')
+                    drawVRScene();
+                  })
+                  .catch((e) => {
+                    console.log("err", e);
+                  });
+              });
+            } else {
+              // If we don't have a VRDisplay, we're probably on
+              // a desktop environment, so set up desktop-oriented controls
+              console.log("---------displays", displays);
+            }
+          });
+        };
+        function drawVRScene(t) {
+          viewer.scene.render();
+          vrDisplay.submitFrame();
+          vrDisplay.requestAnimationFrame(drawVRScene);
+        }
+      }
+    
+    </script>
+  </body>
+</html>
